@@ -5,6 +5,7 @@
 #################
 
 gitMinVersion="1:2.25.1-1ubuntu3.6"
+gitLfsMinVersion="2.9.2-1"
 gitRepositoryUrl="https://bitbucket.dormakaba.net/scm/cccdev/developer-workplace-ubuntu-ansible.git"
 gitRepositoryFolder="/tmp/dwp"
 
@@ -66,6 +67,15 @@ function installDependencies() {
 
         sudo apt-get update
         sudo apt-get install -y git
+    fi
+
+    if ! toolInstalled "git-lfs" "$gitLfsMinVersion"
+    then
+
+        log "INFO" "Installing git lfs package"
+
+        sudo apt-get update
+        sudo apt-get install -y git-lfs
     fi
 }
 
