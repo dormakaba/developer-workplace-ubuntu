@@ -7,7 +7,7 @@
 gitMinVersion="1:2.25.1-1ubuntu3.6"
 gitLfsMinVersion="2.9.2-1"
 gitRepositoryUrl="https://bitbucket.dormakaba.net/scm/cccdev/developer-workplace-ubuntu-ansible.git"
-gitRepositoryFolder="/tmp/dwp"
+gitRepositoryFolder="/tmp/dwp-$(date +%s%N)"
 
 #############
 # FUNCTIONS #
@@ -90,8 +90,6 @@ Usage:
   $scriptName [Options] <Args>
 Not required options:
   -h                    Show this help text
-  -d                    Execute script in dev mode
-  -t <task name>        Start at task with specified name
 USAGE
 
     # exit with error
@@ -112,22 +110,14 @@ echo ""
 
 # get script name
 scriptPath="$(readlink -f $0)"
-scriptFolder="$(dirname $scriptPath)"
 scriptName="$(basename $scriptPath)"
 
-# set variable defaults
-playbookFile="$scriptFolder/$playbookFileName"
-devMode="false"
-
 # get command line args
-while getopts hdt: opt
+while getopts h opt
 do
     case $opt in
         h)
             usage
-        ;;
-        d)
-            devMode="true"
         ;;
         \?)
             log "ERROR" "Invalid option: -$OPTARG"
@@ -143,12 +133,7 @@ installDependencies
 git clone "$gitRepositoryUrl" "$gitRepositoryFolder"
 
 # execute local setup script
-if [ "$devMode" == "true" ]
-then
-    sudo "$gitRepositoryFolder/local-setup.sh" -d
-else
-    sudo "$gitRepositoryFolder/local-setup.sh"
-fi
+sudo "$gitRepositoryFolder/local-setup.sh"
 
 # remove temporary files
 if [ -d "$gitRepositoryFolder" ]
