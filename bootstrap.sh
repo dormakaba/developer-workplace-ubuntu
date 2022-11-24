@@ -6,8 +6,11 @@
 
 gitMinVersion="1:2.25.1-1ubuntu3.6"
 gitLfsMinVersion="2.9.2-1"
-gitRepositoryUrl="https://bitbucket.dormakaba.net/scm/cccdev/developer-workplace-ubuntu-ansible.git"
+gitHostname="bitbucket.dormakaba.net"
+gitRepositoryUrl="https://$gitHostname/scm/cccdev/developer-workplace-ubuntu-ansible.git"
 gitRepositoryFolder="/tmp/dwp-$(date +%s%N)"
+gitCredentialsFile="$HOME/.netrc"
+localSetupScript="$gitRepositoryFolder/local-setup.sh"
 
 #############
 # FUNCTIONS #
@@ -79,6 +82,30 @@ function installDependencies() {
     fi
 }
 
+# --------------------------------------------------------
+# Function for creating temporary git credentials file
+# --------------------------------------------------------
+function createGitTempCredentialsFile() {
+
+    log "INFO" "Creating temporary git credentials file"
+
+    # read git credentials
+    read -p "Please enter git username: " gitUsername
+    read -s -p "Please enter git password: " gitPassword
+
+    # remove old git credentials file if exists
+    if [ -f "$gitCredentialsFile" ]
+    then
+        rm "$gitCredentialsFile"
+    fi
+
+    # create git credentials file
+    touch "$gitCredentialsFile"
+    echo "machine $gitHostname" >> "$gitCredentialsFile"
+    echo "login $gitUsername" >> "$gitCredentialsFile"
+    echo "password $gitPassword" >> "$gitCredentialsFile"
+}
+
 # ---------------------------------------------------------------
 # Function for printing the usage of this script
 # ---------------------------------------------------------------
@@ -126,6 +153,17 @@ do
     esac
 done
 
+# execute dummy sudo command
+sudo echo "Starting system provisioning" >> /dev/null
+if [ "$?" != "0" ]
+then
+    log "ERROR" "Please enter a correct sudo password"
+    exit -1
+fi
+
+# create temporary git credentials file
+createGitTempCredentialsFile
+
 # install dependencies for the script usage
 installDependencies
 
@@ -133,10 +171,19 @@ installDependencies
 git clone "$gitRepositoryUrl" "$gitRepositoryFolder"
 
 # execute local setup script
-sudo "$gitRepositoryFolder/local-setup.sh"
+if [ -f "$localSetupScript" ]
+then
+    sudo "$localSetupScript"
+else
+    log "ERROR" "Local setup script $localSetupScript not found"
+fi
 
 # remove temporary files
 if [ -d "$gitRepositoryFolder" ]
 then
     rm -rf "$gitRepositoryFolder"
+fi
+if [ -f "$gitCredentialsFile" ]
+then
+    rm "$gitCredentialsFile"
 fi
